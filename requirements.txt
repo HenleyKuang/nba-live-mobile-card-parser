@@ -42,7 +42,7 @@ nbformat==4.4.0
 networkx==2.0
 notebook==5.2.2
 numpy==1.14.0
-opencv-python==3.4.0.12
+opencv-python==3.2.0.8
 pandocfilters==1.4.2
 pathlib2==2.3.0
 pexpect==4.3.0
