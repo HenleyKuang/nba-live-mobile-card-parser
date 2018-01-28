@@ -28,10 +28,10 @@ def parse_request(request):
     """
     # Load sk model
     adv_stats_clf, adv_stats_pp = joblib.load(os.path.join(BASE_DIR, 'Training/PKL/adv_stats_digits.pkl'))
-    height_clf, height_pp = joblib.load(os.path.join(BASE_DIR, '/Training/PKL/height_digits.pkl'))
-    ovr_clf, ovr_pp = joblib.load(os.path.join(BASE_DIR, '/Training/PKL/ovr_digits.pkl'))
-    pos_clf, pos_pp = joblib.load(os.path.join(BASE_DIR, '/Training/PKL/pos.pkl'))
-    type_clf, type_pp = joblib.load(os.path.join(BASE_DIR, '/Training/PKL/type.pkl'))
+    height_clf, height_pp = joblib.load(os.path.join(BASE_DIR, 'Training/PKL/height_digits.pkl'))
+    ovr_clf, ovr_pp = joblib.load(os.path.join(BASE_DIR, 'Training/PKL/ovr_digits.pkl'))
+    pos_clf, pos_pp = joblib.load(os.path.join(BASE_DIR, 'Training/PKL/pos.pkl'))
+    type_clf, type_pp = joblib.load(os.path.join(BASE_DIR, 'Training/PKL/type.pkl'))
     # img_path = "../raw_cards\\271567.jpg"
     # img = Image.open(img_path)
     img = Image.open(request.FILES['file'])
