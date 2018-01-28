@@ -517,7 +517,7 @@ def add_new_card_to_db(cards_db, card_dict):
 
 if __name__ == "__main__":
   # Load sk model
-  adv_stats_clf, adv_stats_pp = joblib.load(os.path.join(BASE_DIR, 'Training/PKL/adv_stats_digits.pkl')))
+  adv_stats_clf, adv_stats_pp = joblib.load(os.path.join(BASE_DIR, 'Training/PKL/adv_stats_digits.pkl'))
   height_clf, height_pp = joblib.load(os.path.join(BASE_DIR, 'Training/PKL/height_digits.pkl'))
   ovr_clf, ovr_pp = joblib.load(os.path.join(BASE_DIR, 'Training/PKL/ovr_digits.pkl'))
   pos_clf, pos_pp = joblib.load(os.path.join(BASE_DIR, 'Training/PKL/pos.pkl'))
