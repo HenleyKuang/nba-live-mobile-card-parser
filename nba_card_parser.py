@@ -39,56 +39,67 @@ FORMAT2 = "format2"
 
 stats_format_xy = {
   UNIVERSAL: {
-    "DIGIT_WIDTH_RATIO": 11.0/1090.0,
+    "SINGLE_DIGIT_WIDTH_RATIO": 18.0/1920.0,
+    "DIGIT_WIDTH_RATIO": 60.0/1920.0, # actually the entire stat number, using hog to separate each digit
     "DIGIT_HEIGHT_RATIO": 25.0/613.0,
     "ROW_HEIGHT_RATIO": 30.4/613.0,
     "COL_DIFF_RATIO": 280/1090.0,
   },
   FORMAT1: {
-    "STATS_START_X_RATIO": 575.0/1090.0,
+    "STATS_START_X_RATIO": 886.0/1706.0,
+    "ADDITIONAL_START_X": 15.0/1706.0,
     "STATS_START_Y_RATIO": 158.0/613.0,
   },
   FORMAT2: {
-    "STATS_START_X_RATIO": 900.0/1706.0,
+    "STATS_START_X_RATIO": 895.0/1706.0,
+    "ADDITIONAL_START_X": 7.0/1706.0,
     "STATS_START_Y_RATIO": 285.0/960.0,
   },
-}
-
-name_format_xy = {
-  UNIVERSAL: {
-    "NAME_WIDTH_RATIO": 170.0/1707.0,
-    "NAME_HEIGHT_RATIO": 86.0/960.0,
-  },
-  FORMAT1: {
-    "NAME_START_X_RATIO": 320.0/1707.0,
-    "NAME_START_Y_RATIO": 384.0/960.0,
-  },
-  FORMAT2: {
-    "NAME_START_X_RATIO": 318/1706.0,
-    "NAME_START_Y_RATIO": 425/960.0,
-  }
 }
 
 def calc_stat_rect(column, row, digit, width, height, card_format):
   row_height = stats_format_xy[UNIVERSAL]["ROW_HEIGHT_RATIO"] * height
   col_diff = stats_format_xy[UNIVERSAL]["COL_DIFF_RATIO"] * width
   digit_width = stats_format_xy[UNIVERSAL]["DIGIT_WIDTH_RATIO"] * width
+  if digit != 0:
+    digit_width = stats_format_xy[UNIVERSAL]["SINGLE_DIGIT_WIDTH_RATIO"] * width
   digit_height = stats_format_xy[UNIVERSAL]["DIGIT_HEIGHT_RATIO"] * height
   start_x = stats_format_xy[card_format]["STATS_START_X_RATIO"] * width
+  if digit != 0:
+    start_x += stats_format_xy[card_format]["ADDITIONAL_START_X"] * width
   start_y = stats_format_xy[card_format]["STATS_START_Y_RATIO"] * height
-  x1 = start_x + (col_diff * (column - 1)) + (digit_width * (digit - 1))
+  x1 = start_x + (col_diff * (column - 1))
+  if digit != 0:
+    x1 += (digit_width * (digit - 1))
   y1 = start_y + (row_height * (row - 1))
   x2 = x1 + digit_width
   y2 = y1 + digit_height
   return (x1, y1, x2, y2)
 
+name_format_xy = {
+  FORMAT1: {
+    "NAME_START_X_RATIO": 320.0/1707.0,
+    "NAME_START_Y_RATIO": 384.0/960.0,
+    "NAME_WIDTH_RATIO": 170.0/1707.0,
+    "NAME_HEIGHT_RATIO": 86.0/960.0,
+  },
+  FORMAT2: {
+    "NAME_START_X_RATIO": 590.0/1920.0,
+    "NAME_START_Y_RATIO": 120.0/1080.0,
+    "NAME_WIDTH_RATIO": 650.0/1920.0,
+    "NAME_HEIGHT_RATIO": 75.0/1080.0,
+  }
+}
+
 def calc_name_rect(width, height, start_y_adjust, card_format):
   start_x = name_format_xy[card_format]["NAME_START_X_RATIO"] * width
   start_y = name_format_xy[card_format]["NAME_START_Y_RATIO"] * height
-  name_width = name_format_xy[UNIVERSAL]["NAME_WIDTH_RATIO"] * width
-  name_height = name_format_xy[UNIVERSAL]["NAME_HEIGHT_RATIO"] * height
+  name_width = name_format_xy[card_format]["NAME_WIDTH_RATIO"] * width
+  name_height = name_format_xy[card_format]["NAME_HEIGHT_RATIO"] * height
   x1 = start_x
-  y1 = start_y + (start_y_adjust/960.0 * height)
+  y1 = start_y
+  if card_format == "format1":
+    y1 += (start_y_adjust/960.0 * height)
   x2 = x1 + name_width
   y2 = y1 + name_height
   return (x1, y1, x2, y2)
@@ -206,8 +217,10 @@ def get_height(img, clf, pp, card_format, save=False, save_path=False):
 
 
 def get_name(img, player_height, card_format, save=False):
-  img = img.convert('L')
+  # threshold_value = 232
+  # img = img.point(lambda p: p > threshold_value and 255)
   img = change_contrast(img, 400)
+  img = img.convert('L')
   width, height = img.size
   good_guess_found = False
   for sharpen in range(0,2):
@@ -251,9 +264,49 @@ def get_name(img, player_height, card_format, save=False):
   parse_logger.info("Original Name Guess: %s || Final Name %s" % (original_player_name_guess, player_name))
   return player_name
 
-def get_stats(img, clf, pp, card_format, save=False, save_path=False):
-  img = img.convert('L')
-  img = change_contrast(img, 400)
+def get_stat_rects(img_adv_stats):
+  # convert PIL Image to Cv2
+  open_cv_image = np.array(img_adv_stats.convert('RGB'))
+  # Convert RGB to BGR
+  open_cv_image = open_cv_image[:, :, ::-1].copy()
+  # # Convert to grayscale and apply Gaussian filtering
+  im_gray = cv2.cvtColor(open_cv_image, cv2.COLOR_BGR2GRAY)
+  im_gray = cv2.GaussianBlur(im_gray, (5, 5), 0)
+  # cv2.imshow("Contour",im_gray)
+  # cv2.waitKey(0)
+  # Threshold the image
+  im_th = cv2.adaptiveThreshold(im_gray,35,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,15,2)
+  # Find contours in the image
+  ctrs, hier = cv2.findContours(im_th, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+  # Draw Contour
+  cv2.drawContours(im_th,ctrs,-1,(255,255,255),1)
+
+  # if card_stats["(%s,%s)"%(c,r)]["name"] == "On Ball Defense":
+  #   cv2.imshow("Contour",im_th)
+  #   cv2.waitKey(0)
+  # Get rectangles contains each contour
+  rects = [cv2.boundingRect(ctr) for ctr in ctrs]
+  rects.sort(key=lambda r: r[0], reverse=True)
+  return rects
+
+def check_if_valid_stat_rect(rect, width, height):
+  rect_width = rect[2]
+  rect_height = rect[3]
+  width_ratio = rect_width*1.0/width
+  height_ratio = rect_height*1.0/height
+  if stats_format_xy[UNIVERSAL]["SINGLE_DIGIT_WIDTH_RATIO"] < width_ratio:
+    return False
+  if stats_format_xy[UNIVERSAL]["SINGLE_DIGIT_WIDTH_RATIO"]/2 > width_ratio:
+    return False
+  if stats_format_xy[UNIVERSAL]["DIGIT_HEIGHT_RATIO"] < height_ratio:
+    return False
+  if stats_format_xy[UNIVERSAL]["DIGIT_HEIGHT_RATIO"]/2 > height_ratio:
+    return False
+  return True
+
+def get_stats(img, clf, pp, card_format, save=False, save_path='False'):
+  img = img#.convert('L')
+  # img = change_contrast(img, 400)
   card_stats = {
     "(1,1)": {"name":"Speed", "value": 0},
     "(1,2)": {"name":"Agility", "value": 0},
@@ -272,16 +325,63 @@ def get_stats(img, clf, pp, card_format, save=False, save_path=False):
     "(2,7)": {"name":"Offensive Rebounding", "value": 0},
     "(2,8)": {"name":"Defensive Rebounding", "value": 0},
   }
-  # Crop image to advanced stats portion
+
   for c in range(1,3):
     for r in range(1,9):
+      # Method 1: Using hog to split stat
+      width, height = img.size
+      img_adv_stats = img.crop(calc_stat_rect(c,r,0,width,height, card_format))
+      digit = ""
+      rects = get_stat_rects(img_adv_stats)
+      # print len(rects)
+      # For each rectangular region, calculate HOG features and predict
+      # the digit using Linear SVM.
+      for rect in rects:
+        if not check_if_valid_stat_rect(rect, width, height):
+          continue
+        x1 = rect[0]
+        y1 = rect[1]
+        x2 = rect[0] + rect[2]
+        y2 = rect[1] + rect[3]
+        roi = img_adv_stats.crop((x1,y1,x2,y2))
+        roi = roi.convert('L')
+        roi = change_contrast(roi, 400)
+        # if card_stats["(%s,%s)"%(c,r)]["name"] == "Agility":
+        #   parse_logger.info(rect)
+        #   roi.show()
+        prediction = preprocess_predict(roi, clf, pp, save, save_path)
+        # parse_logger.info(prediction)
+        if prediction == "bad":
+          continue
+        img_adv_stats.paste((0,0,0), (x1,y1,x2,y2)) # prevent double predictions of a single digit
+        digit = prediction + digit
+        card_stats["(%s,%s)"%(c,r)]["value"] = int(digit)
+
+      if card_stats["(%s,%s)"%(c,r)]["value"] >= 10:
+        continue
+      # Method 2: Using proportion to crop each digit in stat
       digit = ""
       for d in range(1,3):
-        width, height = img.size
         img_adv_stats = img.crop(calc_stat_rect(c,r,d,width,height, card_format))
-        prediction = preprocess_predict(img_adv_stats, clf, pp, save, save_path)
-        digit += prediction
-      card_stats["(%s,%s)"%(c,r)]["value"] = int(digit) 
+        rects = get_stat_rects(img_adv_stats)
+        for rect in rects:
+          if not check_if_valid_stat_rect(rect, width, height):
+            continue
+          x1 = rect[0]
+          y1 = rect[1]
+          x2 = rect[0] + rect[2]
+          y2 = rect[1] + rect[3]
+          roi = img_adv_stats.crop((x1,y1,x2,y2))
+          roi = roi.convert('L')
+          roi = change_contrast(roi, 400)
+          prediction = preprocess_predict(roi, clf, pp, save, save_path)
+          if prediction == "bad":
+            continue
+          # if card_stats["(%s,%s)"%(c,r)]["name"] == "Agility":
+          #   roi.show()
+          digit += prediction
+          card_stats["(%s,%s)"%(c,r)]["value"] = int(digit)
+          break
   return card_stats
 
 
@@ -314,15 +414,24 @@ def calc_ovr_rect(width, height, digit, card_format):
 
 def get_ovr(img, clf, pp, card_format, save=False, save_path=False):
   img = img.convert('L')
-  img = change_contrast(img, 400)
+  #img = change_contrast(img, 400)
   width, height = img.size
   ovr_guess = ""
   for d in range(1,3):
-    img_ovr = img.crop(calc_ovr_rect(width,height,d, card_format))
+    img_ovr = img.crop(calc_ovr_rect(width,height, d, card_format))
+    img_ovr = change_contrast(img_ovr, 400)
     prediction = preprocess_predict(img_ovr, clf, pp, save, save_path)
     ovr_guess += prediction
+  if int(ovr_guess) < 20:
+    # ovr could be in the hundreds
+    img_ovr = img.crop(calc_ovr_rect(width,height, 0, card_format))
+    threshold = 51
+    img_ovr = img_ovr.point(lambda p: p > threshold and 255)
+    prediction = preprocess_predict(img_ovr, clf, pp, save, save_path)
+    if int(prediction) == 1:
+      ovr_guess = "1" + ovr_guess
   if int(ovr_guess) < 50:
-    return 0
+    return 0 # failed to get ovr
   return int(ovr_guess)
 
 card_xy_format = {
@@ -463,12 +572,13 @@ def get_format(img):
     return FORMAT2
   return FORMAT1
 
-def create_hash(pos, card_type, height, stats):
+def create_hash(pos, card_type, height, stats, name):
   card_dict_hash = {}
   card_dict_hash["pos"] = pos
   card_dict_hash["type"] = card_type
   card_dict_hash["height"] = height
   card_dict_hash["stats"] = stats
+  card_dict_hash["name"] = name
   return hashlib.sha1(json.dumps(card_dict_hash, sort_keys=True)).hexdigest()
 
 def fix_ratio_if_needed(img):
@@ -505,13 +615,18 @@ def parse_one(img, adv_stats_clf, adv_stats_pp, height_clf, height_pp, ovr_clf, 
   card_dict["ovr"] = get_ovr(img, ovr_clf, ovr_pp, card_format)
   card_dict["name"] = get_name(img, card_dict["height"], card_format)
   card_dict["stats"] = get_stats(img, adv_stats_clf, adv_stats_pp, card_format) #, save=True, save_path="Training/adv_stats_digits")
-  card_dict["hash"] = create_hash(card_dict["pos"], card_dict["type"], card_dict["height"], card_dict["stats"])
+  card_dict["hash"] = create_hash(card_dict["pos"], card_dict["type"], card_dict["height"], card_dict["stats"], card_dict["name"])
   return card_dict
 
 def add_new_card_to_db(cards_db, card_dict):
   hashkey = card_dict["hash"]
-  if not card_db.find_one({"hash": hashkey}):
+  if not check_if_card_exist_in_db(cards_db, hashkey):
     result = cards_db.insert_one(card_dict)
+    return True
+  return False
+
+def check_if_card_exist_in_db(cards_db, card_hash):
+  if cards_db.find_one({"hash": card_hash}):
     return True
   return False
 
@@ -537,7 +652,7 @@ if __name__ == "__main__":
 
   if parse_all:
     all_players_dict = {}
-    thread_count = 5
+    thread_count = 8
     tp = threadpool.ThreadPool(thread_count)
     threadpool_requests = []
 

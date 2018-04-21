@@ -14,7 +14,7 @@ digits.target_names = []
 
 # Get the path of the training set
 parser = OptionParser()
-parser.add_option("--classify_name", dest="classify_name", help="name of classification", action="store")
+parser.add_option("-n", dest="classify_name", help="name of classification", action="store")
 (options, args) = parser.parse_args()
 
 classify_name = options.classify_name

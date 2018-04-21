@@ -19,5 +19,8 @@ from api import views
 
 urlpatterns = [
     url(r'^parse/$', views.parse_request),
-    url(r'^add/$s', views.add_card),
+    url(r'^add/$', views.add_card),
+    url(r'^exist/$', views.exist_card),
+    url(r'^exist_list/$', views.exist_card_list),
+    url(r'^get_api_redirect/$', views.get_api_redirect)
 ]
