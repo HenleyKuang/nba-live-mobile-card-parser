@@ -11,7 +11,7 @@ import regex
 from skimage.feature import hog
 import io
 import pytesseract
-pytesseract.pytesseract.tesseract_cmd = '/app/vendor/tesseract-ocr/bin/tesseract'
+# pytesseract.pytesseract.tesseract_cmd = '/app/vendor/tesseract-ocr/bin/tesseract'
 import threadpool
 import pymongo
 from pymongo import MongoClient
