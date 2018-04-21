@@ -167,7 +167,13 @@ def preprocess_predict(img, clf, pp, save = False, save_path = False):
   pic_data = cv2.resize(pic_data, (30, 30), interpolation=cv2.INTER_AREA)
   pic_data = np.array(pic_data, 'int16')
   pic_hog_fd = hog(pic_data.reshape((30,30)), orientations=9, pixels_per_cell=(14, 14), cells_per_block=(1, 1), visualise=False)
-  pic_hog_fd = pp.transform(np.array([pic_hog_fd], 'float64'))
+  # from sklearn import preprocessing
+  # list_hog_fd = []
+  # list_hog_fd.append(fd)
+  # hog_features = np.array(list_hog_fd, 'float64')
+  # pp = preprocessing.StandardScaler().fit(hog_features)
+  # hog_features = pp.transform(hog_features)
+  pic_hog_fd = pp.transform(np.array(pic_hog_fd, 'float64'))
   prediction = str(clf.predict(pic_hog_fd)[0])
   if save:
     cv2.imwrite(os.path.join(save_path, '%s_%s.png' % (prediction ,id_generator())), save_data)
