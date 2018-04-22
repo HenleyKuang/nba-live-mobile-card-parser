@@ -8,7 +8,7 @@ import json
 import hashlib
 import re
 import regex
-from feature import hog
+from skimage.feature import hog
 import io
 import pytesseract
 # pytesseract.pytesseract.tesseract_cmd = '/app/vendor/tesseract-ocr/bin/tesseract'
