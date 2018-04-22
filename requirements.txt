@@ -67,12 +67,11 @@ regex==2018.1.10
 requests==2.18.3
 scandir==1.6
 scikit-image==0.13.1
-scikit-learn==0.19.1
+scikit-learn==0.16.1
 scipy==1.0.0
 simplegeneric==0.8.1
 singledispatch==3.4.0.3
 six==1.10.0
-sklearn==0.0
 testpath==0.3.1
 tflearn==0.3.2
 tornado==4.5.3
