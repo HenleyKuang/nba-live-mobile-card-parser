@@ -282,6 +282,7 @@ def get_stat_rects(img_adv_stats):
   im_th = cv2.adaptiveThreshold(im_gray,35,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,15,2)
   test = cv2.findContours(im_th, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
   print test
+  print len(test)
   # Find contours in the image
   ctrs, hier = cv2.findContours(im_th, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
   # Draw Contour
