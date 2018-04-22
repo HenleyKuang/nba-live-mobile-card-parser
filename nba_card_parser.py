@@ -169,7 +169,7 @@ def preprocess_predict(img, clf, pp, save = False, save_path = False):
   pic_hog_fd = hog(pic_data.reshape((30,30)), orientations=9, pixels_per_cell=(14, 14), cells_per_block=(1, 1), visualise=False)
   hog_features = np.array([pic_hog_fd], 'float64')
   # from sklearn import preprocessing
-  # pp = preprocessing.StandardScaler().fit(hog_features)
+  # pp = preprocessing.StandardScaler().fit(pic_hog_fd)
   pic_hog_fd = pp.transform(hog_features)
   prediction = str(clf.predict(pic_hog_fd)[0])
   if save:
