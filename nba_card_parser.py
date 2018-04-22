@@ -284,7 +284,7 @@ def get_stat_rects(img_adv_stats):
   print test
   print len(test)
   # Find contours in the image
-  ctrs, hier = cv2.findContours(im_th, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+  ctrs, hier, random = cv2.findContours(im_th, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
   # Draw Contour
   cv2.drawContours(im_th,ctrs,-1,(255,255,255),1)
 
