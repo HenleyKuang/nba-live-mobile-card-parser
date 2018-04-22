@@ -8,7 +8,7 @@ import json
 import hashlib
 import re
 import regex
-from skimage.feature import hog
+from f.feature import hog
 import io
 import pytesseract
 # pytesseract.pytesseract.tesseract_cmd = '/app/vendor/tesseract-ocr/bin/tesseract'
@@ -280,6 +280,8 @@ def get_stat_rects(img_adv_stats):
   # cv2.waitKey(0)
   # Threshold the image
   im_th = cv2.adaptiveThreshold(im_gray,35,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,15,2)
+  test = cv2.findContours(im_th, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+  print test
   # Find contours in the image
   ctrs, hier = cv2.findContours(im_th, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
   # Draw Contour
