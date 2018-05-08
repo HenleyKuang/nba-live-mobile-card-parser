@@ -15,7 +15,7 @@ def add_card(request):
     # import data into mongodb
     client = MongoClient('mongodb://henleyk:test1234@ds215388.mlab.com:15388/nbalivemobilecards')
     db = client.nbalivemobilecards
-    cards_db = db.cards
+    cards_db = db.cards2
     card_dict = json.loads(request.body)
     # print card_dict
     response = {"status": add_new_card_to_db(cards_db, card_dict)}
@@ -25,7 +25,7 @@ def add_card(request):
 def exist_card(request):
     client = MongoClient('mongodb://henleyk:test1234@ds215388.mlab.com:15388/nbalivemobilecards')
     db = client.nbalivemobilecards
-    cards_db = db.cards
+    cards_db = db.cards2
     card_hash = request.body
     response = {"status": check_if_card_exist_in_db(cards_db, card_hash)}
     return HttpResponse(json.dumps(response))
@@ -34,7 +34,7 @@ def exist_card(request):
 def exist_card_list(request):
     client = MongoClient('mongodb://henleyk:test1234@ds215388.mlab.com:15388/nbalivemobilecards')
     db = client.nbalivemobilecards
-    cards_db = db.cards
+    cards_db = db.cards2
     card_hash_list = json.loads(request.body)
     response = {}
     for index in card_hash_list:
@@ -60,6 +60,30 @@ def parse_request(request):
     response = parse_one(img, adv_stats_clf, adv_stats_pp, height_clf, height_pp, ovr_clf, ovr_pp, pos_clf, pos_pp, type_clf, type_pp)
     return HttpResponse(json.dumps(response))
 
-def get_api_redirect(request):
-    print request
-    return HttpResponse(True)
+@csrf_exempt
+def search(request):
+    client = MongoClient('mongodb://henleyk:test1234@ds215388.mlab.com:15388/nbalivemobilecards')
+    db = client.nbalivemobilecards
+    cards_db = db.cards
+    cursor = cards_db.find({}, {'_id': False, 'card_img': False})
+    response = list(cursor)
+    return HttpResponse(json.dumps(response))
+
+@csrf_exempt
+def searchCardData(request):
+    client = MongoClient('mongodb://henleyk:test1234@ds215388.mlab.com:15388/nbalivemobilecards')
+    db = client.nbalivemobilecards
+    cards_db = db.cards
+    card_hash = request.GET.get('hash')
+    response = cards_db.find_one({'hash': card_hash}, {'_id': False, 'card_img': False})
+    return HttpResponse(json.dumps(response))
+
+@csrf_exempt
+def searchCardImage(request):
+    client = MongoClient('mongodb://henleyk:test1234@ds215388.mlab.com:15388/nbalivemobilecards')
+    db = client.nbalivemobilecards
+    cards_db = db.cards
+    card_hash = request.GET.get('hash')
+    response = cards_db.find_one({'hash': card_hash}, {'_id': False, 'card_img': True})
+    image_data = response['card_img']
+    return HttpResponse(image_data.decode('base64'), content_type="image/png")

@@ -11,6 +11,7 @@ import regex
 from skimage.feature import hog
 import io
 import pytesseract
+import lzstring
 # pytesseract.pytesseract.tesseract_cmd = '/app/vendor/tesseract-ocr/bin/tesseract'
 import threadpool
 import pymongo
@@ -473,7 +474,8 @@ def get_card_img(img, card_format, save=False, save_path=False):
   im_data = output.getvalue()
   # img_base64 = 'data:image/png;base64,' + base64.b64encode(im_data)
   img_base64 = base64.b64encode(im_data)
-  return img_base64
+  # img_base64 = lzstring.LZString().compress(img_base64)
+  return json.dumps(img_base64)
 
 pos_format_xy = {
   UNIVERSAL: {

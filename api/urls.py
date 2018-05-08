@@ -22,5 +22,7 @@ urlpatterns = [
     url(r'^add/$', views.add_card),
     url(r'^exist/$', views.exist_card),
     url(r'^exist_list/$', views.exist_card_list),
-    url(r'^get_api_redirect/$', views.get_api_redirect)
+    url(r'^search/$', views.search),
+    url(r'^searchCardData/$', views.searchCardData),
+    url(r'^searchCardImage/$', views.searchCardImage)
 ]
