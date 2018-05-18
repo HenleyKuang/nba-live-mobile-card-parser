@@ -742,12 +742,12 @@ if __name__ == "__main__":
     img = Image.open(img_path)
     card_dict = parse_one(img, adv_stats_clf, adv_stats_pp, height_clf, height_pp, ovr_clf, ovr_pp, pos_clf, pos_pp, type_clf, type_pp)
 	# Print out card's dict
-    print "Name: %s" % card_dict["name"]
-    print "OVR: %s" % card_dict["ovr"]
-    print "Type: %s" % card_dict["type"]
-    print "Height: %s" % card_dict["height"]
-    print "Position: %s" % card_dict["pos"]
-    print "Card Image: %s" % card_dict["card_img"][0:100]
-    print "Hash: %s" % card_dict["hash"]
+    parse_logger.info("Name: %s" % card_dict["name"])
+    parse_logger.info("OVR: %s" % card_dict["ovr"])
+    pparse_logger.info("Type: %s" % card_dict["type"])
+    parse_logger.info("Height: %s" % card_dict["height"])
+    parse_logger.info("Position: %s" % card_dict["pos"])
+    parse_logger.info("Card Image: %s" % card_dict["card_img"][0:100])
+    parse_logger.info("Hash: %s" % card_dict["hash"])
     for k, v in card_dict["stats"].iteritems():
-      print "%s: %s" % (v["name"], v["value"])
+      parse_logger.info("%s: %s" % (v["name"], v["value"]))
