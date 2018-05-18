@@ -52,7 +52,10 @@ __license__ = "MIT license"
 # standard library modules
 import sys
 import threading
-import Queue
+try:
+    import Queue
+except:
+    import queue
 import traceback
 import multiprocessing
 
