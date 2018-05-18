@@ -57,14 +57,14 @@ def parse_request(request):
     # img = Image.open(img_path)
     img = Image.open(request.FILES['file'])
 
-    response = parse_one(img, adv_stats_clf, adv_stats_pp, height_clf, height_pp, ovr_clf, ovr_pp, pos_clf, pos_pp, type_clf, type_pp)
+    response = parse_one(img, adv_stats_clf, adv_stats_pp, height_clf, height_pp, ovr_clf, ovr_pp, pos_clf, pos_pp, type_clf, type_pp, True)
     return HttpResponse(json.dumps(response))
 
 @csrf_exempt
 def search(request):
     client = MongoClient('mongodb://henleyk:test1234@ds215388.mlab.com:15388/nbalivemobilecards')
     db = client.nbalivemobilecards
-    cards_db = db.cards
+    cards_db = db.cards2
     cursor = cards_db.find({}, {'_id': False, 'card_img': False})
     response = list(cursor)
     return HttpResponse(json.dumps(response))
@@ -73,7 +73,7 @@ def search(request):
 def searchCardData(request):
     client = MongoClient('mongodb://henleyk:test1234@ds215388.mlab.com:15388/nbalivemobilecards')
     db = client.nbalivemobilecards
-    cards_db = db.cards
+    cards_db = db.cards2
     card_hash = request.GET.get('hash')
     response = cards_db.find_one({'hash': card_hash}, {'_id': False, 'card_img': False})
     return HttpResponse(json.dumps(response))
@@ -82,7 +82,7 @@ def searchCardData(request):
 def searchCardImage(request):
     client = MongoClient('mongodb://henleyk:test1234@ds215388.mlab.com:15388/nbalivemobilecards')
     db = client.nbalivemobilecards
-    cards_db = db.cards
+    cards_db = db.cards2
     card_hash = request.GET.get('hash')
     response = cards_db.find_one({'hash': card_hash}, {'_id': False, 'card_img': True})
     image_data = response['card_img']

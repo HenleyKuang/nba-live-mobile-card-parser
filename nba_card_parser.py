@@ -8,6 +8,7 @@ import json
 import hashlib
 import re
 import regex
+import time
 from skimage.feature import hog
 import io
 import pytesseract
@@ -55,8 +56,105 @@ stats_format_xy = {
   FORMAT2: {
     "STATS_START_X_RATIO": 895.0/1706.0,
     "ADDITIONAL_START_X": 7.0/1706.0,
-    "STATS_START_Y_RATIO": 285.0/960.0,
+    "STATS_START_Y_RATIO": 292.0/960.0,
   },
+}
+
+name_format_xy = {
+  FORMAT1: {
+    "NAME_START_X_RATIO": 320.0/1707.0,
+    "NAME_START_Y_RATIO": 384.0/960.0,
+    "NAME_WIDTH_RATIO": 170.0/1707.0,
+    "NAME_HEIGHT_RATIO": 86.0/960.0,
+  },
+  FORMAT2: {
+    "NAME_START_X_RATIO": 590.0/1920.0,
+    "NAME_START_Y_RATIO": 120.0/1080.0,
+    "NAME_WIDTH_RATIO": 650.0/1920.0,
+    "NAME_HEIGHT_RATIO": 75.0/1080.0,
+  }
+}
+
+ht_format_xy = {
+  UNIVERSAL: {
+    "HT_HEIGHT_RATIO": 30.0/960.0,
+    "DIGIT_WIDTH_RATIO": 35.0/2.0/1707.0,
+  },
+  FORMAT1: {
+    "HT_START_X_RATIO": 588.0/1707.0,
+    "HT_START_Y_RATIO": 163.0/960.0,
+  },
+  FORMAT2: {
+    "HT_START_X_RATIO": 588/1706.0,
+    "HT_START_Y_RATIO": 205/960.0,
+  }
+}
+
+ovr_format_xy = {
+  UNIVERSAL: {
+    "OVR_HEIGHT_RATIO": 60.0/960.0,
+    "DIGIT_WIDTH_RATIO": 60.0/2.0/1707.0,
+  },
+  FORMAT1: {
+    "OVR_START_X_RATIO": 458.0/1707.0,
+    "OVR_START_Y_RATIO": 190.0/960.0,
+  },
+  FORMAT2: {
+    "OVR_START_X_RATIO": 455.0/1706.0,
+    "OVR_START_Y_RATIO": 232.0/960.0,
+  }
+}
+
+card_xy_format = {
+  UNIVERSAL: {
+    "CARD_WIDTH_RATIO": 225.0/1706.0,
+    "CARD_HEIGHT_RATIO": 335.0/960.0,
+  },
+  FORMAT1: {
+    "CARD_START_X_RATIO": 310.0/1706.0,
+    "CARD_START_Y_RATIO": 180.0/960.0,
+  },
+  FORMAT2: {
+    "CARD_START_X_RATIO": 310.0/1706.0,
+    "CARD_START_Y_RATIO": 222.0/960.0,
+  }
+}
+
+pos_format_xy = {
+  UNIVERSAL: {
+    "POS_WIDTH_RATIO": 30.0/1706.0,
+    "POS_HEIGHT_RATIO": 28.0/960.0,
+  },
+  FORMAT1: {
+    "POS_START_X_RATIO": 473.0/1706.0,
+    "POS_START_Y_RATIO": 268.0/960.0,
+  },
+  FORMAT2: {
+    "POS_START_X_RATIO": 475.0/1706.0,
+    "POS_START_Y_RATIO": 310.0/960.0,
+  }
+}
+
+type_format_xy = {
+  UNIVERSAL: {
+    "TYPE_WIDTH_RATIO": 65.0/1706.0,
+    "TYPE_HEIGHT_RATIO": 65.0/960.0,
+  },
+  FORMAT1: {
+    "TYPE_START_X_RATIO": 460.0/1706.0,
+    "TYPE_START_Y_RATIO": 250.0/960.0,
+  },
+  FORMAT2: {
+    "TYPE_START_X_RATIO": 360.0/1334.0,
+    "TYPE_START_Y_RATIO": 230.0/750.0,
+  }
+}
+
+cancel_button_xy = {
+  "X_RATIO": 800.0/1706.0,
+  "Y_RATIO": 785.0/960.0,
+  "WIDTH_RATIO": 120.0/1706.0,
+  "HEIGHT_RATIO": 50.0/906.0,
 }
 
 def calc_stat_rect(column, row, digit, width, height, card_format):
@@ -77,21 +175,6 @@ def calc_stat_rect(column, row, digit, width, height, card_format):
   x2 = x1 + digit_width
   y2 = y1 + digit_height
   return (x1, y1, x2, y2)
-
-name_format_xy = {
-  FORMAT1: {
-    "NAME_START_X_RATIO": 320.0/1707.0,
-    "NAME_START_Y_RATIO": 384.0/960.0,
-    "NAME_WIDTH_RATIO": 170.0/1707.0,
-    "NAME_HEIGHT_RATIO": 86.0/960.0,
-  },
-  FORMAT2: {
-    "NAME_START_X_RATIO": 590.0/1920.0,
-    "NAME_START_Y_RATIO": 120.0/1080.0,
-    "NAME_WIDTH_RATIO": 650.0/1920.0,
-    "NAME_HEIGHT_RATIO": 75.0/1080.0,
-  }
-}
 
 def calc_name_rect(width, height, start_y_adjust, card_format):
   start_x = name_format_xy[card_format]["NAME_START_X_RATIO"] * width
@@ -177,22 +260,6 @@ def preprocess_predict(img, clf, pp, save = False, save_path = False):
     cv2.imwrite(os.path.join(save_path, '%s_%s.png' % (prediction ,id_generator())), save_data)
   return prediction
 
-
-ht_format_xy = {
-  UNIVERSAL: {
-    "HT_HEIGHT_RATIO": 30.0/960.0,
-    "DIGIT_WIDTH_RATIO": 35.0/2.0/1707.0,
-  },
-  FORMAT1: {
-    "HT_START_X_RATIO": 588.0/1707.0,
-    "HT_START_Y_RATIO": 163.0/960.0,
-  },
-  FORMAT2: {
-    "HT_START_X_RATIO": 588/1706.0,
-    "HT_START_Y_RATIO": 198/960.0,
-  }
-}
-
 def calc_height_rect(width, height, digit, card_format):
   start_x = ht_format_xy[card_format]["HT_START_X_RATIO"] * width
   start_y = ht_format_xy[card_format]["HT_START_Y_RATIO"] * height
@@ -213,13 +280,18 @@ def get_height(img, clf, pp, card_format, save=False, save_path=False):
   # get feet of height
   img_ht = img.crop(calc_height_rect(width,height,1,card_format))
   prediction = preprocess_predict(img_ht, clf, pp, save, save_path)
-  ht_guess = int(prediction) * 12
+  if prediction != "bad":
+    ht_guess = int(prediction) * 12
+  else:
+    ht_guess = 0
   # get inches of height
   img_ht = img.crop(calc_height_rect(width,height,2,card_format))
   prediction = preprocess_predict(img_ht, clf, pp, save, save_path)
-  ht_guess += int(prediction)
+  if prediction != "bad":
+    ht_guess += int(prediction)
+  else:
+    ht_guess = 0
   return ht_guess
-
 
 def get_name(img, player_height, card_format, save=False):
   # threshold_value = 232
@@ -245,7 +317,6 @@ def get_name(img, player_height, card_format, save=False):
         # img_player_name.show()
         good_guess_found = True
         break
-
   # Lower case
   player_name_guess = player_name_guess.lower()
   if save:
@@ -389,23 +460,6 @@ def get_stats(img, clf, pp, card_format, save=False, save_path='False'):
           break
   return card_stats
 
-
-
-ovr_format_xy = {
-  UNIVERSAL: {
-    "OVR_HEIGHT_RATIO": 60.0/960.0,
-    "DIGIT_WIDTH_RATIO": 60.0/2.0/1707.0,
-  },
-  FORMAT1: {
-    "OVR_START_X_RATIO": 458.0/1707.0,
-    "OVR_START_Y_RATIO": 190.0/960.0,
-  },
-  FORMAT2: {
-    "OVR_START_X_RATIO": 455.0/1706.0,
-    "OVR_START_Y_RATIO": 225.0/960.0,
-  }
-}
-
 def calc_ovr_rect(width, height, digit, card_format):
   start_x = ovr_format_xy[card_format]["OVR_START_X_RATIO"] * width
   start_y = ovr_format_xy[card_format]["OVR_START_Y_RATIO"] * height
@@ -418,41 +472,38 @@ def calc_ovr_rect(width, height, digit, card_format):
   return (x1, y1, x2, y2)
 
 def get_ovr(img, clf, pp, card_format, save=False, save_path=False):
-  img = img.convert('L')
-  #img = change_contrast(img, 400)
+  # img = img.convert('L')
+  # for retry in range(2):
+  #   if retry > 0:
+  #     img = change_contrast(img, 400)
   width, height = img.size
   ovr_guess = ""
   for d in range(1,3):
     img_ovr = img.crop(calc_ovr_rect(width,height, d, card_format))
-    img_ovr = change_contrast(img_ovr, 400)
+    img_ovr = change_contrast(img_ovr, 150)
+    # threshold = 51
+    # img_ovr = img_ovr.point(lambda p: p > threshold and 255)
+    img_ovr = img_ovr.convert('L')
     prediction = preprocess_predict(img_ovr, clf, pp, save, save_path)
-    ovr_guess += prediction
-  if int(ovr_guess) < 20:
-    # ovr could be in the hundreds
-    img_ovr = img.crop(calc_ovr_rect(width,height, 0, card_format))
-    threshold = 51
-    img_ovr = img_ovr.point(lambda p: p > threshold and 255)
-    prediction = preprocess_predict(img_ovr, clf, pp, save, save_path)
-    if int(prediction) == 1:
-      ovr_guess = "1" + ovr_guess
-  if int(ovr_guess) < 50:
-    return 0 # failed to get ovr
+    # if prediction == "bad":
+    #   threshold = 51
+    #   img_ovr = img_ovr.point(lambda p: p > threshold and 255)
+    #   prediction = preprocess_predict(img_ovr, clf, pp, save, save_path)
+    if prediction != "bad":
+      ovr_guess += prediction
+  # if int(ovr_guess) < 20:
+  #   # ovr could be in the hundreds
+  #   img_ovr = img.crop(calc_ovr_rect(width,height, 0, card_format))
+  #   threshold = 51
+  #   img_ovr = img_ovr.point(lambda p: p > threshold and 255)
+  #   prediction = preprocess_predict(img_ovr, clf, pp, save, save_path)
+  #   if int(prediction) == 1:
+  #     ovr_guess = "1" + ovr_guess
+  # if int(ovr_guess) >= 70 and int(ovr_guess) <= 99:
+  #   break
+  # if int(ovr_guess) < 80 or int(over_guess) > 99:
+  #   return 0 # failed to get ovr
   return int(ovr_guess)
-
-card_xy_format = {
-  UNIVERSAL: {
-    "CARD_WIDTH_RATIO": 225.0/1706.0,
-    "CARD_HEIGHT_RATIO": 335.0/960.0,
-  },
-  FORMAT1: {
-    "CARD_START_X_RATIO": 310.0/1706.0,
-    "CARD_START_Y_RATIO": 180.0/960.0,
-  },
-  FORMAT2: {
-    "CARD_START_X_RATIO": 310.0/1706.0,
-    "CARD_START_Y_RATIO": 215.0/960.0,
-  }
-}
 
 def calc_card_rect(width, height, card_format):
   start_x = card_xy_format[card_format]["CARD_START_X_RATIO"] * width
@@ -469,28 +520,15 @@ def get_card_img(img, card_format, save=False, save_path=False):
   width, height = img.size
   img_card = img.crop(calc_card_rect(width, height, card_format))
   # img_card.show()
+  img_card_width, img_card_height = img_card.size
+  img_card = img_card.resize((int(round(img_card_width/1.5)), int(round(img_card_height/1.5))), Image.ANTIALIAS)
   output = StringIO()
-  img_card.save(output, format='PNG')
+  img_card.save(output, format='JPEG', optimize=True, quality=85)
   im_data = output.getvalue()
   # img_base64 = 'data:image/png;base64,' + base64.b64encode(im_data)
   img_base64 = base64.b64encode(im_data)
   # img_base64 = lzstring.LZString().compress(img_base64)
-  return json.dumps(img_base64)
-
-pos_format_xy = {
-  UNIVERSAL: {
-    "POS_WIDTH_RATIO": 30.0/1706.0,
-    "POS_HEIGHT_RATIO": 28.0/960.0,
-  },
-  FORMAT1: {
-    "POS_START_X_RATIO": 473.0/1706.0,
-    "POS_START_Y_RATIO": 268.0/960.0,
-  },
-  FORMAT2: {
-    "POS_START_X_RATIO": 475.0/1706.0,
-    "POS_START_Y_RATIO": 303.0/960.0,
-  }
-}
+  return img_base64
 
 def calc_pos_rect(width, height, card_format):
   start_x = pos_format_xy[card_format]["POS_START_X_RATIO"] * width
@@ -510,21 +548,6 @@ def get_pos(img, clf, pp, card_format, save=False, save_path=False):
   img_pos = img.crop(calc_pos_rect(width, height, card_format))
   prediction = preprocess_predict(img_pos, clf, pp, save, save_path)
   return prediction
-
-type_format_xy = {
-  UNIVERSAL: {
-    "TYPE_WIDTH_RATIO": 65.0/1706.0,
-    "TYPE_HEIGHT_RATIO": 65.0/960.0,
-  },
-  FORMAT1: {
-    "TYPE_START_X_RATIO": 460.0/1706.0,
-    "TYPE_START_Y_RATIO": 250.0/960.0,
-  },
-  FORMAT2: {
-    "TYPE_START_X_RATIO": 360.0/1334.0,
-    "TYPE_START_Y_RATIO": 225.0/750.0,
-  }
-}
 
 def calc_type_rect(width, height, card_format):
   start_x = type_format_xy[card_format]["TYPE_START_X_RATIO"] * width
@@ -546,14 +569,6 @@ def get_type(img, clf, pp, card_format, save=False, save_path=False):
   img_type = img.crop(calc_type_rect(width, height, card_format))
   prediction = preprocess_predict(img_type, clf, pp, save, save_path)
   return prediction
-
-
-cancel_button_xy = {
-  "X_RATIO": 800.0/1706.0,
-  "Y_RATIO": 785.0/960.0,
-  "WIDTH_RATIO": 120.0/1706.0,
-  "HEIGHT_RATIO": 50.0/906.0,
-}
 
 def get_cancel_button_rect(width, height):
   start_x = cancel_button_xy["X_RATIO"] * width
@@ -578,13 +593,14 @@ def get_format(img):
     return FORMAT2
   return FORMAT1
 
-def create_hash(pos, card_type, height, stats, name):
+def create_hash(pos, card_type, height, stats, name, ovr):
   card_dict_hash = {}
   card_dict_hash["pos"] = pos
   card_dict_hash["type"] = card_type
   card_dict_hash["height"] = height
   card_dict_hash["stats"] = stats
   card_dict_hash["name"] = name
+  card_dict_hash["ovr"] = ovr
   return hashlib.sha1(json.dumps(card_dict_hash, sort_keys=True)).hexdigest()
 
 def fix_ratio_if_needed(img):
@@ -599,7 +615,7 @@ def fix_ratio_if_needed(img):
     return img_new
   return img
 
-def parse_one(img, adv_stats_clf, adv_stats_pp, height_clf, height_pp, ovr_clf, ovr_pp, pos_clf, pos_pp, type_clf, type_pp):
+def parse_one(img, adv_stats_clf, adv_stats_pp, height_clf, height_pp, ovr_clf, ovr_pp, pos_clf, pos_pp, type_clf, type_pp, saveOption = False):
   card_dict = {
     "name": "",
     "ovr": 0,
@@ -614,18 +630,38 @@ def parse_one(img, adv_stats_clf, adv_stats_pp, height_clf, height_pp, ovr_clf, 
   img = fix_ratio_if_needed(img)
   card_format = get_format(img)
 
-  card_dict["pos"] = get_pos(img, pos_clf, pos_pp, card_format)
-  card_dict["card_img"] = get_card_img(img, card_format)
-  card_dict["type"] = get_type(img, type_clf, type_pp, card_format)
-  card_dict["height"] = get_height(img, height_clf, height_pp, card_format)
-  card_dict["ovr"] = get_ovr(img, ovr_clf, ovr_pp, card_format)
+  card_dict["height"] = get_height(img, height_clf, height_pp, card_format, save=saveOption, save_path='Training/height_digits')
   card_dict["name"] = get_name(img, card_dict["height"], card_format)
-  card_dict["stats"] = get_stats(img, adv_stats_clf, adv_stats_pp, card_format) #, save=True, save_path="Training/adv_stats_digits")
-  card_dict["hash"] = create_hash(card_dict["pos"], card_dict["type"], card_dict["height"], card_dict["stats"], card_dict["name"])
+  if len(card_dict["name"]) < 3:
+    return card_dict
+  card_dict["pos"] = get_pos(img, pos_clf, pos_pp, card_format, save=saveOption, save_path='Training/pos')
+  card_dict["card_img"] = get_card_img(img, card_format)
+  card_dict["type"] = get_type(img, type_clf, type_pp, card_format, save=saveOption, save_path='Training/type')
+  card_dict["ovr"] = get_ovr(img, ovr_clf, ovr_pp, card_format, save=saveOption, save_path="Training/ovr_digits")
+  card_dict["stats"] = get_stats(img, adv_stats_clf, adv_stats_pp, card_format, save=saveOption, save_path="Training/adv_stats_digits")
+  card_dict["hash"] = create_hash(card_dict["pos"], card_dict["type"], card_dict["height"], card_dict["stats"], card_dict["name"], card_dict["ovr"])
+  return card_dict
+
+def parse_one_main_stats(img, ovr_clf, ovr_pp, pos_clf, pos_pp, type_clf, type_pp, height, saveOption = False):
+  card_dict = {
+    "name": "",
+    "ovr": 0,
+    "type": "",
+    "pos": ""
+  }
+
+  img = fix_ratio_if_needed(img)
+  card_format = get_format(img)
+
+  card_dict["pos"] = get_pos(img, pos_clf, pos_pp, card_format, save=False, save_path='Training/pos')
+  card_dict["type"] = get_type(img, type_clf, type_pp, card_format, save=False, save_path='Training/type')
+  card_dict["ovr"] = get_ovr(img, ovr_clf, ovr_pp, card_format, save=False, save_path="Training/ovr_digits")
+  card_dict["name"] = get_name(img, height, card_format)
   return card_dict
 
 def add_new_card_to_db(cards_db, card_dict):
   hashkey = card_dict["hash"]
+  card_dict["add_time"] = int(time.time())
   if not check_if_card_exist_in_db(cards_db, hashkey):
     result = cards_db.insert_one(card_dict)
     return True
