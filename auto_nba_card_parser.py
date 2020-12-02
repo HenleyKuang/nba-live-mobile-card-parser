@@ -19,9 +19,11 @@ auto_parse_logger = logconfig.get_logger(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+
 def pairwise(iterable):
     a = iter(iterable)
     return izip(a, a)
+
 
 def check_card_errors(card_main_data, card_dict):
     for index in card_dict["stats"]:
@@ -37,6 +39,7 @@ def check_card_errors(card_main_data, card_dict):
             return True
     return False
 
+
 img_path = "C:\\Users\\hkuang\\Pictures\\MEmu Photo\\Screenshots\\"
 processing_path = "C:\\Users\\hkuang\\Pictures\\MEmu Photo\\Processing Screenshots\\"
 completed_path = "C:\\Users\\hkuang\\Pictures\\MEmu Photo\\Completed Screenshots\\"
@@ -44,9 +47,10 @@ duplicate_path = "C:\\Users\\hkuang\\Pictures\\MEmu Photo\\Duplicate Screenshots
 error_path = "C:\\Users\\hkuang\\Pictures\\MEmu Photo\\Error Screenshots\\"
 exception_path = "C:\\Users\\hkuang\\Pictures\\MEmu Photo\\Exception Screenshots\\"
 
-client = MongoClient('mongodb://henleyk:test1234@ds215388.mlab.com:15388/nbalivemobilecards')
+client = MongoClient("mongodb://henleyk:test1234@nbalivemobilecards-shard-00-00.bp4sq.mongodb.net:27017,nbalivemobilecards-shard-00-01.bp4sq.mongodb.net:27017,nbalivemobilecards-shard-00-02.bp4sq.mongodb.net:27017/nbalivemobilecards?ssl=true&replicaSet=atlas-zdv1z0-shard-0&authSource=admin&retryWrites=true&w=majority")
 db = client.nbalivemobilecards
 cards_db = db.cards2
+
 
 def thread_func_wrapper(files, adv_stats_clf, adv_stats_pp, height_clf, height_pp, ovr_clf, ovr_pp, pos_clf, pos_pp, type_clf, type_pp, dry):
     # get files
@@ -62,12 +66,15 @@ def thread_func_wrapper(files, adv_stats_clf, adv_stats_pp, height_clf, height_p
     try:
         # parse adv stats img
         img = Image.open(processing_path_2)
-        card_dict = parse_one(img, adv_stats_clf, adv_stats_pp, height_clf, height_pp, ovr_clf, ovr_pp, pos_clf, pos_pp, type_clf, type_pp, dry)
+        card_dict = parse_one(img, adv_stats_clf, adv_stats_pp, height_clf,
+                              height_pp, ovr_clf, ovr_pp, pos_clf, pos_pp, type_clf, type_pp, dry)
         # parse main stats img
         img = Image.open(processing_path_1)
-        card_main_data = parse_one_main_stats(img, ovr_clf, ovr_pp, pos_clf, pos_pp, type_clf, type_pp, card_dict["height"])
+        card_main_data = parse_one_main_stats(
+            img, ovr_clf, ovr_pp, pos_clf, pos_pp, type_clf, type_pp, card_dict["height"])
         # rename to <name>__<ovr>_<type>_<hash>
-        rename_file = "%s_%s_%s_%s" % (card_dict["name"].replace(" ", "_"), card_dict["ovr"], card_dict["type"], card_dict["hash"])
+        rename_file = "%s_%s_%s_%s" % (card_dict["name"].replace(
+            " ", "_"), card_dict["ovr"], card_dict["type"], card_dict["hash"])
         if check_card_errors(card_main_data, card_dict):
             error_path_1 = "%s%s_1.png" % (error_path, rename_file)
             if not os.path.exists(error_path_1):
@@ -79,7 +86,8 @@ def thread_func_wrapper(files, adv_stats_clf, adv_stats_pp, height_clf, height_p
                 os.rename(processing_path_2, error_path_2)
             else:
                 os.remove(processing_path_2)
-            auto_parse_logger.info("Error: %s || %s" % (error_path_1, error_path_2))
+            auto_parse_logger.info("Error: %s || %s" %
+                                   (error_path_1, error_path_2))
         elif options.dry:
             pass
         elif add_new_card_to_db(cards_db, card_dict):
@@ -87,7 +95,8 @@ def thread_func_wrapper(files, adv_stats_clf, adv_stats_pp, height_clf, height_p
             os.rename(processing_path_1, completed_path_1)
             completed_path_2 = "%s%s_2.png" % (completed_path, rename_file)
             os.rename(processing_path_2, completed_path_2)
-            auto_parse_logger.info("Completed: %s || %s" % (completed_path_1, completed_path_2))
+            auto_parse_logger.info("Completed: %s || %s" %
+                                   (completed_path_1, completed_path_2))
         else:
             auto_parse_logger.info("Duplicate Found.")
             duplicate_path_1 = "%s%s_1.png" % (duplicate_path, rename_file)
@@ -112,13 +121,19 @@ def thread_func_wrapper(files, adv_stats_clf, adv_stats_pp, height_clf, height_p
         os.rename(processing_path_2, exception_path_2)
     return True
 
+
 if __name__ == "__main__":
     # Load sk model
-    adv_stats_clf, adv_stats_pp = joblib.load(os.path.join(BASE_DIR, 'Training/PKL/adv_stats_digits.pkl'))
-    height_clf, height_pp = joblib.load(os.path.join(BASE_DIR, 'Training/PKL/height_digits.pkl'))
-    ovr_clf, ovr_pp = joblib.load(os.path.join(BASE_DIR, 'Training/PKL/ovr_digits.pkl'))
-    pos_clf, pos_pp = joblib.load(os.path.join(BASE_DIR, 'Training/PKL/pos.pkl'))
-    type_clf, type_pp = joblib.load(os.path.join(BASE_DIR, 'Training/PKL/type.pkl'))
+    adv_stats_clf, adv_stats_pp = joblib.load(
+        os.path.join(BASE_DIR, 'Training/PKL/adv_stats_digits.pkl'))
+    height_clf, height_pp = joblib.load(os.path.join(
+        BASE_DIR, 'Training/PKL/height_digits.pkl'))
+    ovr_clf, ovr_pp = joblib.load(os.path.join(
+        BASE_DIR, 'Training/PKL/ovr_digits.pkl'))
+    pos_clf, pos_pp = joblib.load(
+        os.path.join(BASE_DIR, 'Training/PKL/pos.pkl'))
+    type_clf, type_pp = joblib.load(
+        os.path.join(BASE_DIR, 'Training/PKL/type.pkl'))
 
     parser = OptionParser()
     parser.add_option("--dry", dest="dry", action="store_true")
@@ -137,11 +152,14 @@ if __name__ == "__main__":
     for file1, file2 in pairwise(files):
         both_files = [file1, file2]
         request = threadpool.WorkRequest(thread_func_wrapper,
-                                        # underlying we use requests so (connect timeout, read timeout) both in seconds
-                                        [both_files, adv_stats_clf, adv_stats_pp, height_clf, height_pp, ovr_clf, ovr_pp, pos_clf, pos_pp, type_clf, type_pp, options.dry],
-                                        callback=threadpool.make_default_threadpool_callback(auto_parse_logger),
-                                        exc_callback=threadpool.make_default_threadpool_exception_callback(auto_parse_logger),
-                                        name='parse_card thread %s' % file1)
+                                         # underlying we use requests so (connect timeout, read timeout) both in seconds
+                                         [both_files, adv_stats_clf, adv_stats_pp, height_clf, height_pp,
+                                             ovr_clf, ovr_pp, pos_clf, pos_pp, type_clf, type_pp, options.dry],
+                                         callback=threadpool.make_default_threadpool_callback(
+                                             auto_parse_logger),
+                                         exc_callback=threadpool.make_default_threadpool_exception_callback(
+                                             auto_parse_logger),
+                                         name='parse_card thread %s' % file1)
         threadpool_requests.append(request)
 
     for request in threadpool_requests:
@@ -160,9 +178,3 @@ if __name__ == "__main__":
         except threadpool.NoResultsPending:
             break
     tp.close()
-
-
-
-
-
-
